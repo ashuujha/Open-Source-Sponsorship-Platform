@@ -242,7 +242,7 @@ function DashboardContent() {
                     </div>
 
                     {/* Category selectors */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       {categories.map((cat) => (
                         <button
                           key={cat}
@@ -435,7 +435,7 @@ function DashboardContent() {
                         <div className="space-y-2">
                           <div className="h-2.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-950 relative">
                             <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-500"
+                              className="h-full bg-blue-600 rounded-full transition-all duration-500"
                               style={{ width: `${Math.min(100, (activeProjectWithEscrow.currentFunding / activeProjectWithEscrow.goalFunding) * 100)}%` }}
                             />
                           </div>
@@ -462,7 +462,7 @@ function DashboardContent() {
 
                       <button
                         onClick={() => setSponsorModalProject(activeProjectWithEscrow)}
-                        className="w-full h-10.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/10 cursor-pointer"
+                        className="w-full h-10.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow cursor-pointer"
                       >
                         <Heart className="w-4 h-4 fill-white/10" />
                         Boost Sponsorship & Support
