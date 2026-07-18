@@ -172,7 +172,7 @@ function DashboardContent() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* View switching bar */}
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 flex items-center justify-between">
+      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="bg-neutral-900/60 p-1 rounded-xl flex items-center border border-neutral-800/80">
           <button
             onClick={() => setActiveTab("marketplace")}

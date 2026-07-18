@@ -85,7 +85,7 @@ export default function LandingPage() {
           </div>
 
           {/* Right Side: Interactive tech flows */}
-          <div className="lg:col-span-5 relative w-full">
+          <div className="hidden lg:block lg:col-span-5 relative w-full">
             <TechFlowDiagram />
           </div>
         </section>
