@@ -163,8 +163,25 @@ export async function executeContractTx(
         onStatusUpdate("confirmed", txHash, null);
         return txHash;
       } else if (status === "FAILED") {
-        const errorResult = (txResult as any).resultXdr || "Transaction failed";
-        throw new Error("Transaction execution failed: " + errorResult);
+        let errorMsg = "Transaction failed";
+        try {
+          if (txResult.resultXdr) {
+            if (typeof txResult.resultXdr === "string") {
+              errorMsg = txResult.resultXdr;
+            } else if (typeof txResult.resultXdr.toXDR === "function") {
+              errorMsg = txResult.resultXdr.toXDR("base64");
+            } else {
+              errorMsg = JSON.stringify(txResult.resultXdr);
+            }
+          } else if ((txResult as any).errorResult) {
+            errorMsg = JSON.stringify((txResult as any).errorResult);
+          } else {
+            errorMsg = JSON.stringify(txResult);
+          }
+        } catch (e) {
+          errorMsg = "Transaction failed: " + String(txResult);
+        }
+        throw new Error("Transaction execution failed: " + errorMsg);
       }
     }
 
