@@ -23,9 +23,9 @@ export const STELLAR_NETWORK = {
 
 // Contract Address Config - Fallback to mock addresses if not yet deployed
 let contracts = {
-  registry: "CBA725B6HNEVGL6BQL4X5J36F4GMLHXZVYYG7P2F2GMX5J4LTYPLREGY", // placeholder
-  vault: "CCA725B6HNEVGL6BQL4X5J36F4GMLHXZVYYG7P2F2GMX5J4LTYPLVAUL", // placeholder
-  asset: "CAS3J7GY3JWCR5P33JH347ZPS6OU473FB7B7YWU754FEV627725Z276F", // Native Token (XLM) SAC on Testnet
+  registry: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4", // valid fallback
+  vault: "CAAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQC526", // valid fallback
+  asset: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC", // native XLM testnet fallback
 };
 
 try {
@@ -44,7 +44,16 @@ export const horizonServer = new Horizon.Server(STELLAR_NETWORK.horizonUrl);
  * Fetch account details from Horizon.
  */
 export async function getAccountDetails(address: string) {
-  return await horizonServer.loadAccount(address);
+  try {
+    return await horizonServer.loadAccount(address);
+  } catch (err: any) {
+    if (err.response?.status === 404 || err.name === "NotFoundError" || err.message?.includes("404")) {
+      throw new Error(
+        `Account not funded: The account ${address} is not active on Stellar Testnet. Please fund it with testnet XLM using Friendbot (https://friendbot.stellar.org/?addr=${address}) to activate it.`
+      );
+    }
+    throw err;
+  }
 }
 
 /**
@@ -121,7 +130,7 @@ export async function executeContractTx(
     }
 
     // 4. Assemble the simulated transaction
-    const preparedTx = rpc.assembleTransaction(tx, simulation) as any;
+    const preparedTx = rpc.assembleTransaction(tx, simulation).build() as Transaction;
 
     // 5. Send to wallet for signing
     const signedXdr = await signFn(preparedTx.toXDR());
@@ -165,7 +174,28 @@ export async function executeContractTx(
     return txHash;
   } catch (err: any) {
     console.error("executeContractTx failed:", err);
-    onStatusUpdate("failed", null, err.message || "Unknown error occurred.");
+    
+    let userMsg = "Unknown error occurred.";
+    if (err) {
+      if (typeof err === "string") {
+        userMsg = err;
+      } else if (err.message) {
+        userMsg = err.message;
+      } else if (err.code === -4) {
+        userMsg = "Transaction signing request rejected by user.";
+      } else {
+        try {
+          userMsg = JSON.stringify(err);
+          if (userMsg === "{}") {
+            userMsg = "Transaction signature failed or request rejected by user.";
+          }
+        } catch (e) {
+          userMsg = String(err);
+        }
+      }
+    }
+
+    onStatusUpdate("failed", null, userMsg);
     throw err;
   }
 }

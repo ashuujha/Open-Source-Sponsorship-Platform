@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} h-full antialiased`}>
+    <html lang="en" className={`${outfit.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-bg-dark text-foreground">
         <Providers>
           <Navbar />
