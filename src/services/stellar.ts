@@ -145,6 +145,7 @@ export async function executeContractTx(
     }
 
     const txHash = submitResponse.hash;
+    onStatusUpdate("processing", txHash, null);
     
     // 7. Poll transaction status
     let status: string = submitResponse.status;
