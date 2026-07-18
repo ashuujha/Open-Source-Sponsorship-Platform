@@ -43,7 +43,7 @@ describe("Navbar Component", () => {
     expect(screen.getByText("Live Feed")).toBeInTheDocument();
     expect(screen.getByText("Tx Center")).toBeInTheDocument();
     expect(screen.getByText("Analytics")).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("displays connect wallet button when disconnected", () => {

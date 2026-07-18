@@ -156,7 +156,7 @@ export async function executeContractTx(
       pollAttempts++;
       await new Promise((resolve) => setTimeout(resolve, 2000));
       
-      const txResult = await rpcServer.getTransaction(txHash);
+      const txResult = await rpcServer.getTransaction(txHash) as any;
       status = txResult.status;
 
       if (status === "SUCCESS") {
