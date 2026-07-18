@@ -21,11 +21,11 @@ export default function TechFlowDiagram() {
   const [hoveredLine, setHoveredLine] = useState<number | null>(null);
 
   const leftNodes: TechNode[] = [
-    { id: "react", name: "React", icon: "⚛️", color: "#38bdf8", iconBg: "bg-sky-500/10" },
-    { id: "typescript", name: "TypeScript", icon: "TS", color: "#3178c6", iconBg: "bg-blue-600/10" },
-    { id: "tailwind", name: "Tailwind CSS", icon: "🍃", color: "#0ea5e9", iconBg: "bg-teal-500/10" },
-    { id: "libsiter", name: "Libsiter", icon: "🔥", color: "#f97316", iconBg: "bg-orange-500/10" },
-    { id: "github", name: "GitHub", icon: "🐙", color: "#ffffff", iconBg: "bg-neutral-800/20" },
+    { id: "react", name: "React", icon: "RE", color: "#60a5fa", iconBg: "bg-blue-950/30" },
+    { id: "typescript", name: "TypeScript", icon: "TS", color: "#3b82f6", iconBg: "bg-blue-950/50" },
+    { id: "tailwind", name: "Tailwind CSS", icon: "TW", color: "#38bdf8", iconBg: "bg-sky-950/30" },
+    { id: "libsiter", name: "Libsiter", icon: "LB", color: "#94a3b8", iconBg: "bg-slate-900/50" },
+    { id: "github", name: "GitHub", icon: "GH", color: "#ffffff", iconBg: "bg-neutral-800/40" },
   ];
 
   const rightNodes: CreatorNode[] = [
@@ -33,36 +33,36 @@ export default function TechFlowDiagram() {
       id: "creator1",
       name: "Dan",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80",
-      logo: "⚛️",
-      logoBg: "bg-purple-600/25",
+      logo: "RE",
+      logoBg: "bg-blue-950/80",
     },
     {
       id: "creator2",
       name: "Alex",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80",
-      logo: "▲",
-      logoBg: "bg-black",
+      logo: "VC",
+      logoBg: "bg-neutral-900/80",
     },
     {
       id: "creator3",
       name: "Sarah",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80",
-      logo: "⚡",
-      logoBg: "bg-emerald-600/25",
+      logo: "SB",
+      logoBg: "bg-slate-900/80",
     },
     {
       id: "creator4",
       name: "Marcus",
       avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&h=100&q=80",
-      logo: "⚡",
-      logoBg: "bg-green-600/25",
+      logo: "SB",
+      logoBg: "bg-slate-900/80",
     },
     {
       id: "creator5",
       name: "Elena",
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&h=100&q=80",
-      logo: "▲",
-      logoBg: "bg-orange-600/25",
+      logo: "VC",
+      logoBg: "bg-neutral-900/80",
     },
   ];
 
@@ -76,9 +76,9 @@ export default function TechFlowDiagram() {
   ];
 
   return (
-    <div id="tech-flow-container" className="relative flex items-center justify-between w-full h-[380px] bg-neutral-950/20 rounded-3xl p-4 overflow-hidden border border-neutral-900/40">
+    <div id="tech-flow-container" className="relative flex items-center justify-between w-full h-[380px] bg-neutral-950/20 rounded-3xl p-4 overflow-hidden border border-neutral-900/50">
       {/* Background radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06),transparent_60%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.03),transparent_60%)] pointer-events-none" />
 
       {/* Left side: Tech nodes */}
       <div className="flex flex-col justify-between h-full z-10 w-[130px]">
@@ -86,15 +86,15 @@ export default function TechFlowDiagram() {
           <motion.div
             key={node.id}
             id={`tech-node-${node.id}`}
-            className="flex items-center gap-2.5 px-3 py-2 bg-neutral-900/80 border border-neutral-800/70 hover:border-blue-500/50 rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-black/40 group w-full"
+            className="flex items-center gap-2.5 px-3 py-2 bg-neutral-900/80 border border-neutral-800/80 hover:border-blue-600 rounded-xl cursor-pointer transition-all duration-300 shadow group w-full"
             onMouseEnter={() => setHoveredLine(idx)}
             onMouseLeave={() => setHoveredLine(null)}
             whileHover={{ x: 4, scale: 1.02 }}
           >
-            <div className={`w-7 h-7 flex items-center justify-center rounded-lg text-sm font-bold ${node.iconBg} border border-neutral-700/30 group-hover:scale-110 transition-transform`}>
+            <div className={`w-7.5 h-7.5 flex items-center justify-center rounded-lg text-[10px] font-bold ${node.iconBg} border border-neutral-800 group-hover:scale-105 transition-transform font-mono`}>
               <span style={{ color: node.color }}>{node.icon}</span>
             </div>
-            <span className="text-xs font-medium text-neutral-300 group-hover:text-white font-sans">
+            <span className="text-[11px] font-semibold text-neutral-300 group-hover:text-white">
               {node.name}
             </span>
           </motion.div>
@@ -109,17 +109,17 @@ export default function TechFlowDiagram() {
             {leftNodes.map((node, idx) => (
               <linearGradient key={node.id} id={`grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={node.color} stopOpacity={hoveredLine === idx ? 0.9 : 0.4} />
-                <stop offset="50%" stopColor="#3b82f6" stopOpacity={hoveredLine === idx ? 0.9 : 0.25} />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity={hoveredLine === idx ? 0.9 : 0.2} />
                 <stop offset="100%" stopColor={node.color} stopOpacity={hoveredLine === idx ? 0.9 : 0.4} />
               </linearGradient>
             ))}
             {/* Drop shadows for glowing path */}
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
             <filter id="strong-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feGaussianBlur stdDeviation="6" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
@@ -135,8 +135,8 @@ export default function TechFlowDiagram() {
                 <path
                   d={path.d}
                   stroke={nodeColor}
-                  strokeWidth={isHovered ? 6 : 1.5}
-                  strokeOpacity={isHovered ? 0.35 : 0.08}
+                  strokeWidth={isHovered ? 5 : 1.5}
+                  strokeOpacity={isHovered ? 0.25 : 0.05}
                   filter={isHovered ? "url(#strong-glow)" : "none"}
                   className="transition-all duration-300"
                 />
@@ -146,13 +146,13 @@ export default function TechFlowDiagram() {
                   id={`flow-path-${path.id}`}
                   d={path.d}
                   stroke={`url(#grad-${path.id})`}
-                  strokeWidth={isHovered ? 2.5 : 1.5}
+                  strokeWidth={isHovered ? 2 : 1.5}
                   filter={isHovered ? "url(#glow)" : "none"}
                   className="transition-all duration-300"
                 />
 
                 {/* Flow particles traveling along paths */}
-                <circle r={isHovered ? 3.5 : 2} fill={nodeColor} filter="url(#glow)">
+                <circle r={isHovered ? 3 : 2} fill={nodeColor} filter="url(#glow)">
                   <animateMotion
                     dur={isHovered ? "1.8s" : "3.5s"}
                     repeatCount="indefinite"
@@ -163,7 +163,7 @@ export default function TechFlowDiagram() {
                 </circle>
 
                 {/* Delayed second particle for richer flow animation */}
-                <circle r={isHovered ? 2.5 : 1.5} fill="#ffffff" fillOpacity="0.8">
+                <circle r={isHovered ? 2 : 1.5} fill="#ffffff" fillOpacity="0.7">
                   <animateMotion
                     dur={isHovered ? "1.8s" : "3.5s"}
                     begin="1s"
@@ -188,13 +188,13 @@ export default function TechFlowDiagram() {
             className="relative group cursor-pointer"
             onMouseEnter={() => setHoveredLine(idx)}
             onMouseLeave={() => setHoveredLine(null)}
-            whileHover={{ scale: 1.08 }}
+            whileHover={{ scale: 1.05 }}
           >
             {/* Pulsating back-ring when parent tech path is hovered */}
             <AnimatePresence>
               {hoveredLine === idx && (
                 <motion.div
-                  className="absolute -inset-1.5 rounded-full bg-blue-500/25 blur-sm"
+                  className="absolute -inset-1.5 rounded-full bg-blue-600/10 border border-blue-500/20 blur-sm"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -209,11 +209,11 @@ export default function TechFlowDiagram() {
                 src={node.avatar}
                 alt={node.name}
                 referrerPolicy="no-referrer"
-                className="w-11 h-11 rounded-full border-2 border-neutral-800 group-hover:border-blue-500/80 transition-colors object-cover shadow-md"
+                className="w-11 h-11 rounded-full border-2 border-neutral-800 group-hover:border-blue-600 transition-colors object-cover shadow-sm"
               />
 
               {/* Connected project/tech emblem tag overlay */}
-              <div className={`absolute -right-1 -bottom-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] text-white border border-neutral-800 ${node.logoBg} shadow-sm backdrop-blur-sm font-bold`}>
+              <div className={`absolute -right-1 -bottom-1 w-5.5 h-5.5 flex items-center justify-center rounded-full text-[9px] text-neutral-300 border border-neutral-800 ${node.logoBg} shadow-sm backdrop-blur-sm font-bold font-mono`}>
                 {node.logo}
               </div>
             </div>
