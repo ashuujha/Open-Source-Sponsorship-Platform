@@ -37,6 +37,28 @@ export function useProjectQuery(projectId: number) {
   });
 }
 
+export function useIsProjectVerifiedQuery(projectId: number) {
+  return useQuery({
+    queryKey: ["is-verified", projectId],
+    queryFn: async () => {
+      if (!projectId || projectId <= 0) return false;
+      try {
+        const resVal = await simulateContractCall(
+          CONTRACT_ADDRESSES.registry,
+          "is_project_verified",
+          [nativeToScVal(BigInt(projectId), { type: "u64" })]
+        );
+        if (!resVal) return false;
+        return Boolean(scValToNative(resVal));
+      } catch (e) {
+        console.error("is_project_verified error:", e);
+        return false;
+      }
+    },
+    enabled: projectId > 0,
+  });
+}
+
 export function useProjectCountQuery() {
   return useQuery({
     queryKey: ["project-count"],

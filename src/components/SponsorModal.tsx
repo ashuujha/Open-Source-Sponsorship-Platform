@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, ShieldCheck, Star, Users, Check, Flame, Wallet, AlertCircle } from "lucide-react";
+import { Heart, ShieldCheck, Star, Users, Check, Flame, Wallet, AlertCircle, Loader2 } from "lucide-react";
 import { Project } from "../types";
-import { useSponsorProject } from "@/hooks/useContracts";
+import { useSponsorProject, useIsProjectVerifiedQuery, useVerifyProject } from "@/hooks/useContracts";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 
 interface SponsorModalProps {
@@ -21,6 +21,10 @@ interface Tier {
 export default function SponsorModal({ project, onClose, onSponsorSuccess }: SponsorModalProps) {
   const { walletAddress, isConnected, connect } = useStellarWallet();
   const sponsorMutation = useSponsorProject();
+  const verifyMutation = useVerifyProject();
+
+  const blockchainProjectId = parseInt(project.id, 10) || 1;
+  const { data: isVerifiedOnChain = (project.verified ?? true), refetch: refetchVerification } = useIsProjectVerifiedQuery(blockchainProjectId);
 
   const [selectedTier, setSelectedTier] = useState<number>(1); // default Supporter (50 XLM)
   const [customAmount, setCustomAmount] = useState<string>("");
@@ -28,6 +32,7 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
   const [sponsorMessage, setSponsorMessage] = useState<string>("");
   const [step, setStep] = useState<"details" | "payment" | "success">("details");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isVerifyingNow, setIsVerifyingNow] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [createdTxHash, setCreatedTxHash] = useState<string>("");
 
@@ -66,6 +71,32 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
     setStep("payment");
   };
 
+  const handleVerifyNow = async () => {
+    if (!isConnected || !walletAddress) {
+      try {
+        await connect();
+        return;
+      } catch (err: any) {
+        setErrorMsg("Please connect your wallet first.");
+        return;
+      }
+    }
+    setIsVerifyingNow(true);
+    setErrorMsg(null);
+    try {
+      await verifyMutation.mutateAsync({
+        projectId: blockchainProjectId,
+        verified: true,
+        projectName: project.name,
+      });
+      await refetchVerification();
+    } catch (e: any) {
+      setErrorMsg("Verification failed: " + (e?.message || String(e)));
+    } finally {
+      setIsVerifyingNow(false);
+    }
+  };
+
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -80,10 +111,13 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
       }
     }
 
+    if (isVerifiedOnChain === false) {
+      setErrorMsg("This project is unverified on the smart contract registry (Contract Error #3). Only verified projects can receive sponsorships. Click 'Verify Project Now' above or verify it in the Admin Console (/settings).");
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const blockchainProjectId = parseInt(project.id, 10) || 1;
-      
       const txHash = await sponsorMutation.mutateAsync({
         projectId: blockchainProjectId,
         amount: getAmount(),
@@ -101,7 +135,7 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
         try { rawMsg = JSON.stringify(rawMsg); } catch (e) { rawMsg = String(rawMsg); }
       }
       if (rawMsg.includes("is_project_verified") || rawMsg.includes("Contract, #3") || rawMsg.includes('"contractCode":3')) {
-        rawMsg = "Project is not verified on the smart contract registry (Contract Error #3). Only verified projects can receive sponsorships. Please verify this project in the Admin Console (/settings).";
+        rawMsg = "Project is not verified on the smart contract registry (Contract Error #3). Only verified projects can receive sponsorships. Please verify this project in the Admin Console (/settings) or click 'Verify Project Now'.";
       } else if (rawMsg.includes("Simulation failed") && rawMsg.includes("{")) {
         rawMsg = "Transaction simulation failed. Please ensure the project is verified and your wallet has sufficient XLM balance.";
       }
@@ -130,7 +164,7 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
         transition={{ type: "spring", damping: 25, stiffness: 350 }}
       >
         {/* Header decoration */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500" />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-blue-600" />
 
         {/* Modal Header */}
         <div className="p-6 border-b border-neutral-900/80 flex items-center justify-between">
@@ -152,15 +186,15 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
           {step !== "success" && !isProcessing && (
             <button
               onClick={onClose}
-              className="text-neutral-500 hover:text-neutral-300 p-1.5 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
-              ✕
+              &times;
             </button>
           )}
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
           <AnimatePresence mode="wait">
             {step === "details" && (
               <motion.form
@@ -172,20 +206,20 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Tiers list */}
+                {/* Select Tier */}
                 <div className="space-y-3">
                   <label className="text-xs font-semibold text-neutral-400 font-sans uppercase tracking-wider block">
-                    Choose Support Level
+                    Choose Sponsorship Tier
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {tiers.map((t, idx) => (
                       <div
-                        key={idx}
+                        key={t.name}
                         onClick={() => setSelectedTier(idx)}
-                        className={`p-4 rounded-2xl border bg-neutral-900/40 cursor-pointer select-none transition-all duration-300 ${t.color} ${
+                        className={`p-4 rounded-2xl border bg-neutral-900/40 cursor-pointer select-none transition-all duration-300 ${
                           selectedTier === idx
-                            ? "bg-blue-950/20 ring-1 ring-blue-500/50 scale-[1.01]"
-                            : ""
+                            ? "bg-blue-950/20 ring-1 ring-blue-500/50 border-blue-500/50 scale-[1.01]"
+                            : t.color
                         }`}
                       >
                         <div className="flex justify-between items-start">
@@ -328,15 +362,32 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                   </div>
                 </div>
 
-                {project.verified === false && (
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2 text-xs text-amber-300">
-                    <AlertCircle className="w-4.5 h-4.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold">Project Pending Admin Verification</p>
-                      <p className="text-[11px] text-amber-400/80 mt-0.5">
-                        This project is registered on-chain but has not been verified by the platform admin. Smart contract escrows require admin verification before receiving funds. You can verify it in the Admin Console (/settings).
-                      </p>
+                {isVerifiedOnChain === false && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-3 text-xs text-amber-300">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4.5 h-4.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Project Pending Admin Verification</p>
+                        <p className="text-[11px] text-amber-400/80 mt-0.5">
+                          This project is unverified on the smart contract registry. Smart contract escrows require admin verification before receiving funds.
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleVerifyNow}
+                      disabled={isVerifyingNow}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-bold whitespace-nowrap cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {isVerifyingNow ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <span>Verify Project Now</span>
+                      )}
+                    </button>
                   </div>
                 )}
 
@@ -358,7 +409,7 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                   </button>
                   <button
                     type="submit"
-                    disabled={isProcessing || project.verified === false}
+                    disabled={isProcessing || isVerifiedOnChain === false}
                     className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-xs font-bold transition-all shadow-lg shadow-emerald-600/10 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 cursor-pointer"
                   >
                     {isProcessing ? (
@@ -369,8 +420,8 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                         </svg>
                         Approving in Wallet...
                       </span>
-                    ) : project.verified === false ? (
-                      <span>Unverified (Requires Admin Verification)</span>
+                    ) : isVerifiedOnChain === false ? (
+                      <span>Unverified (Click 'Verify Project Now')</span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4" />
@@ -385,67 +436,54 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
             {step === "success" && (
               <motion.div
                 key="success"
-                className="text-center py-6 space-y-6"
+                className="py-6 text-center space-y-6"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ type: "spring", damping: 20 }}
               >
-                <div className="relative flex items-center justify-center mx-auto w-20 h-20">
-                  <motion.div
-                    className="absolute inset-0 bg-emerald-500/20 rounded-full blur-md"
-                    animate={{ scale: [1, 1.3, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  />
-                  <div className="relative w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                    <Check className="w-8 h-8 stroke-[3]" />
-                  </div>
+                <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                  <ShieldCheck className="w-8 h-8" />
                 </div>
 
                 <div className="space-y-2 max-w-sm mx-auto">
-                  <h3 className="text-lg font-bold text-neutral-100 font-sans">
+                  <h4 className="text-xl font-bold text-white font-sans">
                     Sponsorship Confirmed!
-                  </h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    You have successfully sponsored <span className="font-semibold text-neutral-200">{project.name}</span> on the Stellar Testnet ledger. Your transaction is now securely registered!
+                  </h4>
+                  <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+                    Your <span className="font-bold text-emerald-400">{getAmount()} XLM</span> contribution to{" "}
+                    <span className="font-bold text-neutral-200">{project.name}</span> has been locked into the Soroban escrow contract.
                   </p>
                 </div>
 
-                <div className="bg-neutral-900/50 border border-neutral-800/80 rounded-2xl p-4 text-left divide-y divide-neutral-800/60 max-w-sm mx-auto">
-                  <div className="pb-2.5 flex justify-between text-xs">
-                    <span className="text-neutral-400">Sponsor Account:</span>
-                    <span className="font-semibold text-neutral-200 font-mono">
-                      {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}` : ""}
-                    </span>
+                <div className="p-4 bg-neutral-900/40 border border-neutral-800 rounded-2xl max-w-sm mx-auto space-y-2 text-left text-xs font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Tier Badge:</span>
+                    <span className="text-blue-400 font-bold">{getTierName()}</span>
                   </div>
-                  <div className="py-2.5 flex justify-between text-xs">
-                    <span className="text-neutral-400">Sponsor Tier:</span>
-                    <span className="font-semibold text-blue-400">{getTierName()}</span>
-                  </div>
-                  <div className="py-2.5 flex justify-between text-xs">
-                    <span className="text-neutral-400 font-sans">Contribution:</span>
-                    <span className="font-bold text-emerald-400 font-mono">{getAmount()} XLM</span>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Sponsor:</span>
+                    <span className="text-neutral-200">{sponsorName}</span>
                   </div>
                   {createdTxHash && (
-                    <div className="pt-2.5 flex justify-between text-xs">
-                      <span className="text-neutral-400">Transaction:</span>
+                    <div className="flex justify-between items-center border-t border-neutral-800/80 pt-2">
+                      <span className="text-neutral-500">Tx Hash:</span>
                       <a
                         href={`https://stellar.expert/explorer/testnet/tx/${createdTxHash}`}
                         target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-400 font-bold hover:underline font-mono"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline flex items-center gap-1 font-bold text-[10px]"
                       >
-                        {createdTxHash.slice(0, 6)}...{createdTxHash.slice(-6)} ↗
+                        {createdTxHash.slice(0, 6)}...{createdTxHash.slice(-6)}
                       </a>
                     </div>
                   )}
                 </div>
 
                 <button
-                  type="button"
                   onClick={onClose}
-                  className="w-full max-w-sm mx-auto h-11 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-sans text-xs font-bold transition-all shadow-lg cursor-pointer"
+                  className="w-full max-w-sm h-11 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-200 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  Close & Refresh Page
+                  Close & View Dashboard
                 </button>
               </motion.div>
             )}
