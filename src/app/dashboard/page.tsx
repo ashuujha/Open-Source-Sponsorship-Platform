@@ -87,6 +87,7 @@ function DashboardContent() {
         maintainerName: p.owner.slice(0, 8) + "..." + p.owner.slice(-8),
         maintainerAvatar: `https://images.unsplash.com/photo-${1500000000000 + (Number(p.id) * 88888) % 999999}?auto=format&fit=crop&w=100&h=100&q=80`,
         recentSponsors: [],
+        verified: p.verified,
       };
     });
   }, [dbProjects]);

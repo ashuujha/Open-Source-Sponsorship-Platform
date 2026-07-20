@@ -126,7 +126,23 @@ export async function executeContractTx(
     const simulation = await rpcServer.simulateTransaction(tx);
     
     if (!rpc.Api.isSimulationSuccess(simulation)) {
-      throw new Error("Transaction simulation failed: " + JSON.stringify(simulation));
+      const simStr = JSON.stringify(simulation);
+      let userFriendlyMsg = "Transaction simulation failed on Stellar network.";
+
+      if (simStr.includes("is_project_verified") || simStr.includes("Contract, #3") || simStr.includes('"contractCode":3')) {
+        userFriendlyMsg = "Project is not verified on the smart contract registry. Only verified projects can receive sponsorships. Please verify this project in the Admin Console (/settings).";
+      } else if (simStr.includes("Contract, #4") || simStr.includes('"contractCode":4')) {
+        userFriendlyMsg = "Unauthorized transaction. You do not have administrator permissions for this operation.";
+      } else if (simStr.includes("Balance") || simStr.includes("underfunded")) {
+        userFriendlyMsg = "Insufficient XLM balance in your wallet to cover the transaction.";
+      } else {
+        const errorObj = (simulation as any).error;
+        if (typeof errorObj === "string" && errorObj.length < 150) {
+          userFriendlyMsg = errorObj;
+        }
+      }
+
+      throw new Error(userFriendlyMsg);
     }
 
     // 4. Assemble the simulated transaction

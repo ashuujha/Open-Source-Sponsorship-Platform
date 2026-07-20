@@ -96,7 +96,16 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
       onSponsorSuccess(getAmount(), sponsorName.trim(), getTierName(), sponsorMessage.trim() || undefined, txHash);
     } catch (err: any) {
       setIsProcessing(false);
-      setErrorMsg(err.message || "Transaction failed. Please check your wallet configuration.");
+      let rawMsg = err?.message || "Transaction failed. Please check your wallet configuration.";
+      if (typeof rawMsg !== "string") {
+        try { rawMsg = JSON.stringify(rawMsg); } catch (e) { rawMsg = String(rawMsg); }
+      }
+      if (rawMsg.includes("is_project_verified") || rawMsg.includes("Contract, #3") || rawMsg.includes('"contractCode":3')) {
+        rawMsg = "Project is not verified on the smart contract registry (Contract Error #3). Only verified projects can receive sponsorships. Please verify this project in the Admin Console (/settings).";
+      } else if (rawMsg.includes("Simulation failed") && rawMsg.includes("{")) {
+        rawMsg = "Transaction simulation failed. Please ensure the project is verified and your wallet has sufficient XLM balance.";
+      }
+      setErrorMsg(rawMsg);
     }
   };
 
@@ -319,6 +328,18 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                   </div>
                 </div>
 
+                {project.verified === false && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2 text-xs text-amber-300">
+                    <AlertCircle className="w-4.5 h-4.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold">Project Pending Admin Verification</p>
+                      <p className="text-[11px] text-amber-400/80 mt-0.5">
+                        This project is registered on-chain but has not been verified by the platform admin. Smart contract escrows require admin verification before receiving funds. You can verify it in the Admin Console (/settings).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {errorMsg && (
                   <div className="p-3 bg-red-950/20 border border-red-900/30 rounded-xl flex items-start gap-2 text-xs text-red-400">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -337,8 +358,8 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                   </button>
                   <button
                     type="submit"
-                    disabled={isProcessing}
-                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-xs font-bold transition-all shadow-lg shadow-emerald-600/10 disabled:opacity-80 active:scale-98 cursor-pointer"
+                    disabled={isProcessing || project.verified === false}
+                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-xs font-bold transition-all shadow-lg shadow-emerald-600/10 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98 cursor-pointer"
                   >
                     {isProcessing ? (
                       <span className="flex items-center gap-2">
@@ -348,6 +369,8 @@ export default function SponsorModal({ project, onClose, onSponsorSuccess }: Spo
                         </svg>
                         Approving in Wallet...
                       </span>
+                    ) : project.verified === false ? (
+                      <span>Unverified (Requires Admin Verification)</span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4" />

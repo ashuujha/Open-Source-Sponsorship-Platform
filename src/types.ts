@@ -13,6 +13,7 @@ export interface Project {
   maintainerName: string;
   maintainerAvatar: string;
   recentSponsors: Sponsor[];
+  verified?: boolean;
 }
 
 export interface Sponsor {
